@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Verify TokHive execution receipts locally in your browser. Shared Go verification core, no file uploads.">
+  <title>TokHive — Receipt Verifier</title>
+  <link rel="icon" type="image/svg+xml" href="icon.svg">
+  <link rel="stylesheet" href="style.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="./" aria-label="TokHive Verifier home"><img class="brand-mark" src="mark-volt.svg" width="28" height="28" alt=""><span class="brand-wordmark"><span class="tok">Tok</span><span class="hive">Hive</span></span> <span class="brand-divider">/</span> <span class="brand-product">Verifier</span></a>
+    <span class="local-badge"><span aria-hidden="true">●</span> Browser-local verification</span>
+  </header>
+  <main>
+    <div class="intro">
+      <p class="eyebrow">INDEPENDENT VERIFICATION</p>
+      <h1>Inspect the receipt.<br><span>Verify the evidence.</span></h1>
+      <p class="lede">Check the hardware, application and signature behind a TokHive execution. Add the original request or response to check its contents, too.</p>
+    </div>
+    <div class="workspace">
+      <section class="panel input-panel" aria-labelledby="input-title">
+        <div class="panel-heading"><h2 id="input-title">Your evidence</h2><span class="mono">01 — INPUT</span></div>
+        <form id="verify-form">
+          <fieldset id="input-fields">
+            <legend class="sr-only">Verification files and expectations</legend>
+            <div class="mode-tabs" role="group" aria-label="Evidence source">
+              <label><input type="radio" name="mode" value="file" checked> Receipt file</label>
+              <label><input type="radio" name="mode" value="lookup"> Request ID</label>
+            </div>
+            <div id="lookup-fields" hidden>
+              <label class="field-label" for="request-id">Your request ID</label>
+              <input id="request-id" class="text-input mono" type="text" placeholder="Request ID from the API response" autocomplete="off" spellcheck="false" maxlength="128">
+              <label class="field-label" for="api-key">Buyer API key</label>
+              <input id="api-key" class="text-input mono" type="password" placeholder="Your own TokHive API key" autocomplete="off" spellcheck="false" maxlength="512">
+              <p class="hint">Used only to fetch your evidence from <strong id="api-origin">the configured buyer API</strong>. Never stored or included in reports. No administrator access.</p>
+              <div id="attempt-picker" hidden><label class="field-label" for="attempt-id">Execution attempt</label><select id="attempt-id" class="text-input mono"></select><p class="hint">This request has multiple execution receipts. Choose the attempt you want to verify; retries are not combined into one proof.</p></div>
+              <p id="lookup-status" class="hint" role="status"></p>
+            </div>
+            <label id="receipt-zone" class="file-zone primary-file" for="receipt">
+              <span class="file-symbol" aria-hidden="true">↥</span>
+              <strong>Choose an execution receipt</strong>
+              <span>Canonical CBOR · up to 2 MiB</span>
+              <input id="receipt" name="receipt" type="file" required aria-describedby="receipt-name">
+              <span id="receipt-name" class="file-name">No file selected</span>
+            </label>
+            <label class="field-label" for="expected-app">Trusted application identity <span>Required for trust</span></label>
+            <input id="expected-app" class="text-input mono" type="text" placeholder="snp-app: followed by the 64-character release hash" autocomplete="off" spellcheck="false" maxlength="72">
+            <p class="hint">Use the identity from a release you independently trust. The receipt’s own identity is not a trust anchor.</p>
+            <div class="file-pair">
+              <label class="file-zone compact" for="response"><strong>Response body <span>Optional</span></strong><span>Exact upstream bytes · up to 64 MiB</span><input id="response" type="file" aria-describedby="response-name"><span id="response-name" class="file-name">No file selected</span></label>
+              <label class="file-zone compact" for="evidence"><strong>Hardware evidence <span>If needed</span></strong><span>For hash-only receipts · up to 4 MiB</span><input id="evidence" type="file" aria-describedby="evidence-name"><span id="evidence-name" class="file-name">No file selected</span></label>
+            </div>
+            <details class="advanced">
+              <summary>Request integrity &amp; additional expectations</summary>
+              <div class="advanced-content">
+                <p class="hint">To bind the input model and request content, provide both the task specification and the original request body.</p>
+                <div class="file-pair">
+                  <label class="file-zone compact" for="job-spec"><strong>Task specification</strong><span>Canonical CBOR · up to 2 MiB</span><input id="job-spec" type="file" aria-describedby="job-spec-name"><span id="job-spec-name" class="file-name">No file selected</span></label>
+                  <label class="file-zone compact" for="request"><strong>Request body</strong><span>Exact upstream bytes · up to 16 MiB</span><input id="request" type="file" aria-describedby="request-name"><span id="request-name" class="file-name">No file selected</span></label>
+                </div>
+                <label class="field-label" for="expected-host">Expected upstream host</label>
+                <input id="expected-host" class="text-input mono" type="text" placeholder="api.anthropic.com" autocomplete="off" spellcheck="false">
+                <label class="field-label" for="expected-policy">Expected policy hash</label>
+                <input id="expected-policy" class="text-input mono" type="text" placeholder="64 lowercase hex characters" autocomplete="off" spellcheck="false" maxlength="64">
+                <label class="field-label" for="expected-job-id">Expected execution ID</label>
+                <input id="expected-job-id" class="text-input mono" type="text" placeholder="32 lowercase hex characters" autocomplete="off" spellcheck="false" maxlength="32">
+                <p class="hint">This is the receipt’s job ID, not a buyer-facing request ID.</p>
+                <label class="field-label" for="max-age">Maximum receipt age, in seconds</label>
+                <input id="max-age" class="text-input mono" type="number" min="0" max="315360000" step="1" value="0">
+                <p class="hint">0 disables the age limit. Hardware certificates must still be valid now.</p>
+              </div>
+            </details>
+          </fieldset>
+          <p id="form-error" class="error-message" role="alert" hidden></p>
+          <div class="actions"><button class="button primary" id="verify-button" type="submit" disabled>Loading verification engine…</button><button class="button secondary" id="reset-button" type="reset">Reset</button></div>
+          <p class="privacy-note">File mode is offline after loading. Request-ID mode downloads your evidence using your buyer API key. Local files are never uploaded.</p>
+        </form>
+      </section>
+      <section class="panel results-panel" aria-labelledby="results-title">
+        <div class="panel-heading"><h2 id="results-title">Verification report</h2><span class="mono">02 — RESULT</span></div>
+        <div id="engine-status" class="engine-status" role="status">Starting the shared Go / WebAssembly engine…</div>
+        <div id="empty-state" class="empty-state">
+          <div class="empty-mark" aria-hidden="true">⌁</div>
+          <h3>Evidence before confidence.</h3>
+          <p>Your checks will appear here. A valid signature alone does not establish trusted hardware or the application that ran.</p>
+          <ol class="trust-chain"><li>Receipt signature</li><li>AMD + AWS attestation</li><li>Trusted application</li><li>Request / response integrity</li></ol>
+        </div>
+        <div id="report" hidden>
+          <div id="report-banner" class="report-banner" role="status"><p class="eyebrow" id="report-status"></p><h3 id="report-heading"></h3><p id="report-description"></p></div>
+          <div class="scope-grid"><div><span>Receipt</span><strong id="receipt-scope">Not verified</strong></div><div><span>Request</span><strong id="request-scope">Not compared</strong></div><div><span>Response</span><strong id="response-scope">Not compared</strong></div></div>
+          <ol id="checks" class="checks"></ol>
+          <section id="claims-section" class="report-section" hidden><h3>Declarations bound to the receipt</h3><p class="hint">From hash-matching content. Model names and usage are declarations, not independent model identification or token recounting.</p><dl id="claims" class="metadata"></dl></section>
+          <details id="metadata-section" class="report-section"><summary>Signed execution details</summary><p class="hint">These details are trusted only when the receipt passes all required checks.</p><dl id="metadata" class="metadata"></dl></details>
+          <details class="report-section"><summary>What this result means</summary><ul id="notes" class="notes"></ul></details>
+          <a id="download-report" class="button secondary download" download="tokhive-verification.json">Download JSON report ↓</a>
+        </div>
+      </section>
+    </div>
+    <section class="below-grid" aria-label="Verification information">
+      <div><p class="eyebrow">ONE CORE, TWO INTERFACES</p><h2>The same checks in your terminal.</h2><pre><code>tokhive-verify verify \
+  --expected-app snp-app:&lt;trusted-hash&gt; \
+  --response response.raw receipt.cbor</code></pre><p>Add <code>--job-spec</code> and <code>--request</code> to check the input, or <code>--json</code> for a machine-readable report.</p></div>
+      <div><p class="eyebrow">KNOW THE SCOPE</p><h2>Integrity, with clear limits.</h2><p>The receipt commits to the task specification and response bytes. Model and usage fields inside those bytes are indirectly bound when the supplied content matches.</p><p>Transformed API responses may differ from the upstream bytes the TEE signed. Historical evidence with expired certificates is refused. Request-ID lookup uses the public buyer evidence API; only your own requests are accessible.</p></div>
+    </section>
+  </main>
+  <footer><span>TokHive / Independent verification</span><span>No analytics. No third-party assets. No file uploads.</span></footer>
+</body>
+</html>

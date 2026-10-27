@@ -1,0 +1,6 @@
+/bin/
+/web/static/verifier.wasm
+/web/static/wasm_exec.js
+/web/static/wasm_exec.LICENSE
+*.test
+.DS_Store
