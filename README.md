@@ -1,21 +1,21 @@
 # TokHive Verifier
 
-独立的执行回执验证项目，提供 CLI 和网页两种 UI。两者共用 Go 验证核心；网页通过 WebAssembly 在浏览器 Web Worker 中验证，不上传本地回执、请求或响应文件。
+A standalone execution receipt verifier with CLI and web interfaces. Both use the same Go verification core. The web interface runs verification in a browser Web Worker through WebAssembly, without uploading local receipts, requests, or responses.
 
-## 功能
+## Features
 
-- 验证 canonical CBOR 格式、TEE 回执签名和签名公钥绑定。
-- 复用 `tokhive/tee` 的验证库，检查 AWS SEV-SNP／NitroTPM 证据链、硬件策略和预期应用身份；拒绝 simulated 平台。
-- 核对用户指定的应用哈希，以及可选的 policy hash、上游 host、执行 ID、最大回执年龄。
-- 支持内嵌硬件证据和独立 evidence 文件两种回执形式。
-- 可选核对原始响应的执行绑定哈希和字节数；支持 JSON 和 SSE 响应中的 model／usage 声明展示。
-- 可选核对 `任务规格 → 请求体哈希 → 原始请求`，验证请求里的 model 等内容与回执的间接绑定。
-- 支持回执文件入口，以及使用买家 API Key 按请求 ID 下载证据。多次执行尝试必须明确选择，不能将多份回执合成一次验证。
-- 输出逐项检查、签名执行字段、内容核对范围；支持 JSON 报告下载和 CLI 退出码。
+- Verify canonical CBOR encoding, TEE receipt signatures, and signing-key bindings.
+- Reuse the `tokhive/tee` verification library to check AWS SEV-SNP / NitroTPM evidence chains, hardware policy, and the expected application identity. Simulated platforms are rejected.
+- Check a user-supplied application hash and optional expectations for the policy hash, upstream host, execution ID, and maximum receipt age.
+- Support both inline hardware evidence and separate evidence files for hash-only receipts.
+- Optionally compare the raw response's execution-bound hash and byte count. Extract model and usage declarations from supported JSON and SSE responses.
+- Optionally verify the chain from task specification to request-body hash to raw request, establishing the receipt's indirect binding to the requested model and other input content.
+- Accept receipt files or download evidence by request ID using a buyer API key. Requests with multiple execution attempts require an explicit selection; receipts are verified individually.
+- Report individual checks, signed execution fields, and the scope of content comparisons. Export JSON reports and return documented CLI exit codes.
 
-## 构建
+## Build
 
-需要 Go 1.27.3+、Make；Node.js 仅用于可选的 WASM 运行检查。当前开发依赖使用同级 `../tee` 仓库，因此目录应为：
+Requires Go 1.27.3+ and Make. Node.js is needed only for the optional WASM runtime check. Development currently uses the sibling `../tee` checkout:
 
 ```text
 tokhive/
@@ -23,27 +23,28 @@ tokhive/
 └── verifier/
 ```
 
+From the `verifier` directory:
+
 ```bash
-cd /Users/panaw/Projects/tokhive/verifier
 make build
 ./bin/tokhive-verify --help
 ```
 
-`make build` 生成 `web/static/verifier.wasm` 和 Go 官方运行时，再将网页资源嵌入 CLI。最终二进制可单独分发，不需要用户安装 Go。生成资源不纳入版本管理。当前 WASM 因复用 TEE 的完整共享库约为 38 MiB，首次打开需加载；静态托管时建议启用 gzip／Brotli。
+`make build` generates `web/static/verifier.wasm` and copies the official Go runtime, then embeds the web assets in the CLI. The resulting binary can be distributed on its own; users do not need Go installed. Generated build assets are excluded from version control. The WASM engine is currently about 38 MiB because it reuses the TEE shared library. It loads on the first visit; enable gzip or Brotli when hosting the static assets.
 
-## CLI：文件验证
+## CLI: verify a file
 
-先从独立可信的发布来源取得完整应用身份，不能直接把回执自报的哈希当成预期值。
+Obtain the full expected application identity from an independently trusted release source. Do not use the receipt's own claimed hash as the trust anchor.
 
 ```bash
 ./bin/tokhive-verify verify \
-  --expected-app "snp-app:<64位小写十六进制发布哈希>" \
+  --expected-app "snp-app:<64-character-lowercase-hex-release-hash>" \
   --expected-host api.anthropic.com \
   --response response.raw \
   receipt.cbor
 ```
 
-若需核对输入：
+To compare the input as well:
 
 ```bash
 ./bin/tokhive-verify verify \
@@ -55,67 +56,69 @@ make build
   receipt.cbor
 ```
 
-仅哈希回执可增加 `--evidence evidence.bin`。其他选项见 `verify --help`。所有选项放在回执路径之前。
+For a hash-only receipt, add `--evidence evidence.bin`. See `verify --help` for other options. Place all options before the receipt path.
 
-## CLI：请求 ID 验证
+## CLI: verify by request ID
 
-在环境中设置买家 API Key，避免凭证出现在命令行参数／进程列表中：
+Set your buyer API key in the environment so it does not appear in command-line arguments or process listings:
 
 ```bash
-# 将 TOKHIVE_API_KEY 设置为你自己的买家 API Key。
+# Set TOKHIVE_API_KEY to your own buyer API key before running this command.
 ./bin/tokhive-verify verify \
   --request-id "$TOKHIVE_REQUEST_ID" \
   --expected-app "$TOKHIVE_EXPECTED_APP" \
   --json
 ```
 
-默认访问 `https://api.tokhive.ai/v1/verification/requests/{id}`。`--api-base-url` 可指定 API origin；仅支持 HTTPS，本地联调允许 loopback HTTP。`--api-key-env` 可更改凭证变量名。需要多次尝试中的某一份回执时，增加 `--attempt-id <执行ID>`；若没有选择，CLI 列出可选 ID 后退出，不擅自挑选成功尝试。
+The default endpoint is `https://api.tokhive.ai/v1/verification/requests/{id}`. Use `--api-base-url` to select another API origin. HTTPS is required, with loopback HTTP allowed for local development. Use `--api-key-env` to select a different environment variable for the key.
 
-可同时提供本地 `--request`、`--response`、`--job-spec` 或 `--evidence`。本地与远端同类证据冲突时拒绝验证。
+If the request has multiple receipts, add `--attempt-id <execution-id>`. Without a selection, the CLI lists the available IDs and exits; it does not silently choose the successful attempt.
 
-公开接口的买家鉴权与归属校验由 Hive 实现，协议见 [API.md](API.md)。这里不使用管理员接口或管理员会话。接口需要随 Hive 发布部署后才能查询线上请求；没有证据或权限不足不会退回示例数据。
+You can also supply local `--request`, `--response`, `--job-spec`, or `--evidence` files. Conflicting local and downloaded evidence is rejected.
 
-## 网页
+Hive implements buyer authentication and request ownership checks for the public endpoint. See [API.md](API.md) for the protocol. This flow does not use administrator endpoints or administrator sessions. The endpoint must be deployed with Hive before production request lookups are available. Missing evidence or insufficient permissions never fall back to sample data.
+
+## Web interface
 
 ```bash
 ./bin/tokhive-verify serve
-# 本地 Hive 联调：
+# To connect to a local Hive instance:
 ./bin/tokhive-verify serve --api-base-url http://127.0.0.1:5180
 ```
 
-打开终端输出的 `http://127.0.0.1:8787`。选择「Receipt file」或「Request ID」，填入可信应用身份，再点击验证。
+Open the printed URL, `http://127.0.0.1:8787`. Choose **Receipt file** or **Request ID**, enter a trusted application identity, and start verification.
 
-- 文件模式：文件留在浏览器内，验证引擎加载后可离线使用。
-- 请求 ID 模式：买家 Key 仅用于本次向配置好的 Hive 下载证据。Key 不持久化、不放进 URL、不写入报告，下载完成后清空输入框。本机服务只代理这个固定来源的证据查询，不接受任意目标 URL。
-- 原始请求／响应不会上传到本机服务或 Hive。
-- 多次尝试会显示选择框；每份回执单独验证。结果包括通过／失败／跳过及补齐证据提示。
-- 可导出 JSON 报告。修改输入会清除旧报告，避免把旧结论误认为新文件的结果。
+- **File mode:** files stay in the browser. Verification can run offline after the engine loads.
+- **Request ID mode:** the buyer key is used only to download evidence from the configured Hive origin. It is not persisted, placed in URLs, or included in reports. The key input is cleared after a successful download. The local server proxies only this fixed evidence source; it does not accept arbitrary destination URLs.
+- Raw request and response files are never uploaded to the local server or Hive.
+- Requests with multiple receipts display an attempt selector. Each receipt is verified separately. Results distinguish passed, failed, and skipped checks, with instructions for supplying missing evidence.
+- Export a JSON report for inspection or recordkeeping. Changing an input clears the previous report so an old result cannot be mistaken for a new one.
 
-网页静态资源可以单独托管，文件模式仍能工作；当前请求 ID 网页入口使用 `serve` 提供的本地桥接，以避免跨域配置和把 Key 发给任意来源。生产托管若需要该模式，应将同样受限的桥接部署在明确可信的 origin 下，不能直接公开当前仅供 loopback 的服务。
+The static web assets can also be hosted separately, and file mode will still work. The web request-ID flow currently uses the local bridge provided by `serve`, avoiding cross-origin configuration and arbitrary credential destinations. Production hosting of that flow requires an equally restricted bridge under an explicitly trusted origin. Do not directly expose the current loopback-only server as a public service.
 
-## 结果含义
+## Understanding results
 
-| 状态 | 含义 | CLI 退出码 |
+| Result | Meaning | CLI exit code |
 |---|---|---:|
-| `verified` | 所有必要信任检查及已提供内容的核对均通过 | 0 |
-| `failed` | 至少一项检查失败 | 1 |
-| 使用／I/O／查询错误 | 参数错误、文件读取失败或证据下载失败 | 2 |
-| `incomplete` | 没有失败，但缺必要的应用预期值、硬件证明或请求对应的任务规格 | 3 |
+| `verified` | All required trust checks and comparisons for supplied content passed | 0 |
+| `failed` | At least one check failed | 1 |
+| Usage, I/O, or lookup error | Invalid arguments, unreadable files, or failed evidence downloads | 2 |
+| `incomplete` | No checks failed, but a required application expectation, hardware evidence, or task specification is missing | 3 |
 
-`verified` 不等于已核对所有内容：查看独立的 `request_verified`、`response_verified`。没有提供的内容不会标为通过。已签名的失败／截断执行仍可能有真实回执，报告中的 completion 和 HTTP 状态单独显示。
+`verified` does not mean all content was compared. Inspect the separate `request_verified` and `response_verified` fields. Content that was not supplied is never marked as verified. A failed or truncated execution can still produce an authentic signed receipt; the report shows its completion state and HTTP status separately.
 
-model 和 token 数是签名绑定内容中的声明：验证内容哈希后可确认它们未被改动，但验证器不独立识别厂商实际使用的模型，也不重新计算 token 数。非支持格式仍可核对完整字节，只是不提取声明字段。输入／输出 token 数以十进制字符串返回，避免 JavaScript 丢失大整数精度。
+Model names and token counts are declarations inside signature-bound content. Matching content hashes establish that those declarations have not changed. The verifier does not independently identify the model the vendor actually ran or recount tokens. Unsupported content formats can still be compared byte for byte, but their declaration fields are not extracted. Input and output token counts are returned as decimal strings to preserve large-integer precision in JavaScript.
 
-## 当前证据范围
+## Current evidence scope
 
-- 只支持 AWS SEV-SNP 回执；硬件证书按当前时间检查，过期链拒绝。尚不支持带可信历史时间戳的归档证明。
-- 请求 ID 与执行 ID 的映射来自已鉴权 Hive API，该买家请求 ID 本身不是 TEE 签名字段。
-- API 不发布可信版本清单；预期应用哈希必须由使用者从可信发布来源提供。
-- Hive 当前保存回执与任务哈希，未归档完整任务规格和原始上游正文。请求 ID 下载的回执可验证，但输入核对还需单独取得完整规格和原始请求；不能用账单 metadata 代替。
-- 响应必须是 TEE 实际转发的上游正文。Hive 的协议转换、压缩解压或历史恢复可能改变请求／响应字节；客户端看到的正文不一定等于 TEE 签名内容，不能通过重新序列化 JSON 强行匹配。
-- 文件上限：receipt／job spec 2 MiB、evidence 4 MiB、request 16 MiB、response 64 MiB。
+- Only AWS SEV-SNP receipts are supported. Hardware certificates are checked at the current time; expired chains are rejected. Archival verification with trusted historical timestamps is not supported yet.
+- The mapping from buyer request ID to execution ID comes from the authenticated Hive API. The buyer request ID itself is not a TEE-signed field.
+- The API does not publish a trusted release manifest. Users must obtain the expected application hash from a trusted release source.
+- Hive currently stores receipts and task hashes, not complete task specifications or raw upstream bodies. Downloaded receipts can be verified, but comparing the input requires a separately obtained specification and raw request. Billing metadata cannot replace that evidence.
+- A response file must contain the exact upstream body relayed by the TEE. Hive protocol translation, compression or decompression, and history recovery can change request or response bytes. Client-visible bodies may therefore differ from signed content. Reserializing JSON is not a valid way to force a match.
+- File limits: receipt and job specification, 2 MiB each; evidence, 4 MiB; request, 16 MiB; response, 64 MiB.
 
-## 检查
+## Validation
 
 ```bash
 make test
@@ -124,16 +127,16 @@ go run scripts/make-demo.go /tmp/tokhive-verifier-demo
 node scripts/check-wasm.cjs /tmp/tokhive-verifier-demo
 ```
 
-demo 使用软件密钥签名，故意没有真实硬件证明，正确结果是硬件验证失败；不能将其当作成功示例。单元测试通过私有测试 seam 验证成功路径的组合逻辑；公开 API 始终调用真实硬件验证库，没有跳过硬件检查的开关。真实生产回执的成功验收仍需要一份有效的、未过期的硬件证明及可信应用身份。
+The demo is signed with a software key and deliberately lacks genuine hardware evidence. Its expected result is a hardware verification failure; it is not a successful verification example. Unit tests use a private test seam to exercise successful orchestration. The public verification API always calls the real hardware verification library and has no option to bypass it. Acceptance testing of a successful production receipt still requires valid, unexpired hardware evidence and a trusted application identity.
 
-## 目录
+## Project layout
 
 ```text
-verify.go, content.go     共用验证核心与内容绑定
-lookup/                  普通买家证据查询客户端
-cmd/tokhive-verify/       CLI 入口
-cmd/wasm/                相同核心的 WebAssembly 入口
-internal/cli/            CLI 命令、本机静态 UI 与受限查询桥接
-web/static/              网页、Web Worker 和构建后的 WASM
-scripts/                 验证引擎一致性检查与拒绝示例生成器
+verify.go, content.go     Shared verification core and content binding
+lookup/                  Buyer evidence lookup client
+cmd/tokhive-verify/       CLI entry point
+cmd/wasm/                WebAssembly entry point for the same core
+internal/cli/            CLI commands, local web server, and restricted lookup bridge
+web/static/              Web interface, Web Worker, and generated WASM assets
+scripts/                 Engine consistency checks and rejection-demo generator
 ```
