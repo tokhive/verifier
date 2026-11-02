@@ -1,0 +1,59 @@
+name: Deploy verifier to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out verifier
+        uses: actions/checkout@v4
+
+      - name: Check out TEE dependency
+        uses: actions/checkout@v4
+        with:
+          repository: tokhive/tee
+          path: tee
+
+      - name: Match local module layout
+        run: ln -s "$GITHUB_WORKSPACE/tee" "$GITHUB_WORKSPACE/../tee"
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.27.3'
+          cache-dependency-path: go.sum
+
+      - name: Build browser verifier
+        run: make web
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: web/static
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
