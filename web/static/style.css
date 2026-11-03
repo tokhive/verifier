@@ -6,3 +6,16 @@
 /* Brand matches websites/components/Logo.tsx; the font is served locally. */
 @font-face{font-family:Sora;font-style:normal;font-weight:300 700;font-display:swap;src:url("sora-latin.woff2") format("woff2")}
 .brand-wordmark{font-family:Sora,sans-serif;font-size:20px;font-weight:400;letter-spacing:-.02em;color:#f2f2ee;white-space:nowrap}.brand-wordmark .tok{font-weight:300}.brand-wordmark .hive{font-weight:700}
+
+.faq{padding:56px 0 64px;border-bottom:1px solid var(--line)}
+.faq h2{font-size:28px;font-weight:500;letter-spacing:-.03em;margin:0 0 28px}
+.faq-item{border-top:1px solid var(--line)}
+.faq-item summary{font-size:14px;font-weight:500;line-height:1.6;cursor:pointer;padding:20px 0;overflow-wrap:anywhere}
+.faq-answer{max-width:940px;padding:0 0 20px 18px;color:var(--muted);font-size:13px;line-height:1.8;overflow-wrap:anywhere}
+.faq-answer p{margin:0 0 12px}
+.faq-answer p:last-child{margin-bottom:0}
+.faq-answer ul{margin:0 0 12px;padding-left:20px}
+.faq-answer li{margin-bottom:6px}
+.faq-answer strong{color:var(--paper);font-weight:500}
+.faq-answer code{font-size:.92em}
+@media(max-width:440px){.faq{padding:40px 0}.faq h2{font-size:24px}.faq-item summary{padding:18px 0}}

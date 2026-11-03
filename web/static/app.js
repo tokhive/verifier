@@ -13,12 +13,24 @@ let apiOrigin;
 let lookupContext;
 
 const mode = () => form.elements.mode.value;
+function resetHardwareEvidence() {
+  $("hardware-evidence-fields").hidden = true;
+  $("evidence").value = "";
+  $("evidence-name").textContent = "No file selected";
+}
 function updateMode() {
   $("lookup-fields").hidden = mode() !== "lookup";
   $("receipt-zone").hidden = mode() !== "file";
   $("receipt").required = mode() === "file";
 }
-document.querySelectorAll('input[name="mode"]').forEach(input => input.addEventListener("change", updateMode));
+document.querySelectorAll('input[name="mode"]').forEach(input => input.addEventListener("change", () => {
+  updateMode();
+  resetHardwareEvidence();
+}));
+for (const id of ["receipt", "request-id", "api-key", "attempt-id"]) {
+  $(id).addEventListener("input", resetHardwareEvidence);
+  $(id).addEventListener("change", resetHardwareEvidence);
+}
 for (const id of ["request-id", "api-key"]) $(id).addEventListener("input", () => {
   bundle = undefined; $("attempt-picker").hidden = true; $("lookup-status").textContent = "";
 });
@@ -130,6 +142,9 @@ form.addEventListener("input", () => { if (!busy) clearReport(); });
 form.addEventListener("change", () => { if (!busy) clearReport(); });
 form.addEventListener("reset", () => {
   clearReport();
+  resetHardwareEvidence();
+  $("content-comparison").open = false;
+  $("additional-expectations").open = false;
   bundle = undefined; lookupContext = undefined; $("attempt-picker").hidden = true; $("lookup-status").textContent = "";
   setTimeout(updateMode, 0);
   Object.keys(fileLimits).forEach(id => { $(`${id}-name`).textContent = "No file selected"; });
@@ -187,6 +202,8 @@ function addMetadata(target, pairs) {
 }
 
 function render(report) {
+  const missingEvidence = report.checks.some(check => check.id === "hardware" && check.status === "skipped" && check.required);
+  $("hardware-evidence-fields").hidden = !missingEvidence && $("evidence").files.length === 0;
   $("empty-state").hidden = true; $("report").hidden = false;
   const titles = { verified: "Receipt verified.", incomplete: "More evidence needed.", failed: "Verification failed." };
   const descriptions = {

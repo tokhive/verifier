@@ -88,6 +88,10 @@ Hive implements buyer authentication and request ownership checks for the public
 
 Open the printed URL, `http://127.0.0.1:8787`. Choose **Receipt file** or **Request ID**, enter a trusted application identity, and start verification.
 
+The default form focuses on the receipt and trusted application identity. Production receipts already embed hardware evidence. If verification finds a hash-only receipt, the form reveals a **Hardware evidence** input so you can supply the matching file and verify again. Changing the receipt, evidence source, or execution selection clears that supplemental file.
+
+Expand **Compare request or response content (optional)** for raw body comparisons. Comparing a request requires both the original canonical-CBOR task specification and the exact upstream request bytes. Hive's Call Records downloads currently supply the receipt only; obtain these extra files separately from the execution source. Expected host, policy hash, execution ID, and receipt age are under **Additional expectations (optional)**.
+
 - **File mode:** files stay in the browser. Verification can run offline after the engine loads.
 - **Request ID mode:** the buyer key is used only to download evidence from the configured Hive origin. It is not persisted, placed in URLs, or included in reports. The key input is cleared after a successful download. The local server proxies only this fixed evidence source; it does not accept arbitrary destination URLs.
 - Raw request and response files are never uploaded to the local server or Hive.

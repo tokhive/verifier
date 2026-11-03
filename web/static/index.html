@@ -18,7 +18,7 @@
     <div class="intro">
       <p class="eyebrow">INDEPENDENT VERIFICATION</p>
       <h1>Inspect the receipt.<br><span>Verify the evidence.</span></h1>
-      <p class="lede">Check the hardware, application and signature behind a TokHive execution. Add the original request or response to check its contents, too.</p>
+      <p class="lede">Download a receipt from Call Records and check the hardware, application and signature behind that execution. Start with your receipt and a trusted application identity.</p>
     </div>
     <div class="workspace">
       <section class="panel input-panel" aria-labelledby="input-title">
@@ -49,18 +49,25 @@
             <label class="field-label" for="expected-app">Trusted application identity <span>Required for trust</span></label>
             <input id="expected-app" class="text-input mono" type="text" placeholder="snp-app: followed by the 64-character release hash" autocomplete="off" spellcheck="false" maxlength="72">
             <p class="hint">Use the identity from a release you independently trust. The receipt’s own identity is not a trust anchor.</p>
-            <div class="file-pair">
-              <label class="file-zone compact" for="response"><strong>Response body <span>Optional</span></strong><span>Exact upstream bytes · up to 64 MiB</span><input id="response" type="file" aria-describedby="response-name"><span id="response-name" class="file-name">No file selected</span></label>
+            <section id="hardware-evidence-fields" aria-label="Additional hardware evidence" hidden>
+              <p class="hint" id="evidence-help" role="status">This receipt needs a separate hardware evidence file. Choose the file matching its signed evidence hash, then verify again.</p>
               <label class="file-zone compact" for="evidence"><strong>Hardware evidence <span>If needed</span></strong><span>For hash-only receipts · up to 4 MiB</span><input id="evidence" type="file" aria-describedby="evidence-name"><span id="evidence-name" class="file-name">No file selected</span></label>
-            </div>
-            <details class="advanced">
-              <summary>Request integrity &amp; additional expectations</summary>
+            </section>
+            <details class="advanced" id="content-comparison">
+              <summary>Compare request or response content (optional)</summary>
               <div class="advanced-content">
-                <p class="hint">To bind the input model and request content, provide both the task specification and the original request body.</p>
+                <p class="hint">These files are optional for receipt authenticity. Call Records downloads contain the receipt only; Hive does not currently provide task specifications or raw upstream bodies.</p>
+                <label class="file-zone compact" for="response"><strong>Response body <span>Optional comparison</span></strong><span>Exact upstream bytes · up to 64 MiB</span><input id="response" type="file" aria-describedby="response-name"><span id="response-name" class="file-name">No file selected</span></label>
+                <p class="hint">To compare a request, obtain both the original task specification and raw upstream request from the execution source. The receipt contains only the specification's hash, which cannot reconstruct the file.</p>
                 <div class="file-pair">
                   <label class="file-zone compact" for="job-spec"><strong>Task specification</strong><span>Canonical CBOR · up to 2 MiB</span><input id="job-spec" type="file" aria-describedby="job-spec-name"><span id="job-spec-name" class="file-name">No file selected</span></label>
                   <label class="file-zone compact" for="request"><strong>Request body</strong><span>Exact upstream bytes · up to 16 MiB</span><input id="request" type="file" aria-describedby="request-name"><span id="request-name" class="file-name">No file selected</span></label>
                 </div>
+              </div>
+            </details>
+            <details class="advanced" id="additional-expectations">
+              <summary>Additional expectations (optional)</summary>
+              <div class="advanced-content">
                 <label class="field-label" for="expected-host">Expected upstream host</label>
                 <input id="expected-host" class="text-input mono" type="text" placeholder="api.anthropic.com" autocomplete="off" spellcheck="false">
                 <label class="field-label" for="expected-policy">Expected policy hash</label>
@@ -102,8 +109,68 @@
     <section class="below-grid" aria-label="Verification information">
       <div><p class="eyebrow">ONE CORE, TWO INTERFACES</p><h2>The same checks in your terminal.</h2><pre><code>tokhive-verify verify \
   --expected-app snp-app:&lt;trusted-hash&gt; \
-  --response response.raw receipt.cbor</code></pre><p>Add <code>--job-spec</code> and <code>--request</code> to check the input, or <code>--json</code> for a machine-readable report.</p></div>
+  receipt.cbor</code></pre><p>Add <code>--response</code> to compare the output, <code>--job-spec</code> and <code>--request</code> to compare the input, or <code>--json</code> for a machine-readable report.</p></div>
       <div><p class="eyebrow">KNOW THE SCOPE</p><h2>Integrity, with clear limits.</h2><p>The receipt commits to the task specification and response bytes. Model and usage fields inside those bytes are indirectly bound when the supplied content matches.</p><p>Transformed API responses may differ from the upstream bytes the TEE signed. Historical evidence with expired certificates is refused. Request-ID lookup uses the public buyer evidence API; only your own requests are accessible.</p></div>
+    </section>
+    <section class="faq" id="faq" aria-labelledby="faq-title">
+      <p class="eyebrow">COMMON QUESTIONS</p>
+      <h2 id="faq-title">Frequently asked questions</h2>
+      <details class="faq-item">
+        <summary>What does the verifier actually verify?</summary>
+        <div class="faq-answer"><p>It checks the receipt's canonical encoding and signature, hardware attestation, and the application identity you expect. Together, these checks establish that the receipt was signed by a key bound to a supported trusted execution environment (TEE) running the expected application.</p><p>The receipt records the upstream host and path, execution times, HTTP status, completion state, and content hashes. Request and response content comparisons are reported separately.</p></div>
+      </details>
+      <details class="faq-item">
+        <summary>Where do I download an execution receipt?</summary>
+        <div class="faq-answer"><p>Sign in to the Hive Console, open Call Records, and select your call. In the call details, choose <strong>Download for verifier</strong> for an execution attempt with an archived receipt. The download is named <code>receipt-&lt;execution-id&gt;.cbor</code>.</p><p>A call may contain several attempts. Download and verify each receipt separately. Attempts without an archived receipt have no receipt to download.</p></div>
+      </details>
+      <details class="faq-item">
+        <summary>Which files do I need to start verification?</summary>
+        <div class="faq-answer"><p>Start with the original CBOR receipt and an independently trusted application identity. Production receipts include their hardware evidence, so they normally need no additional evidence file.</p><p>Raw request and response files are optional inputs for content comparisons. Comparing a request also requires its task specification.</p></div>
+      </details>
+      <details class="faq-item">
+        <summary>What is the trusted application identity, and where do I get it?</summary>
+        <div class="faq-answer"><p>It is the full <code>snp-app:</code> identity followed by the 64-character lowercase hexadecimal hash of the TEE application you expect to have run. Obtain it from a TEE release source you independently trust.</p><p>The verifier does not currently publish a trusted release manifest or automatically trust the identity declared inside a receipt. Without an independently trusted identity, application trust cannot be verified.</p></div>
+      </details>
+      <details class="faq-item">
+        <summary>What is hardware evidence, and when do I need to provide it?</summary>
+        <div class="faq-answer"><p>Hardware evidence contains the attestation report and related certificate material used to check the TEE's hardware identity and its binding to the receipt's signing key and application. The verifier checks supported AWS SEV-SNP evidence against its embedded AMD and AWS trust roots.</p><p>Production receipts already include this material. If a receipt contains only an evidence hash, verification reveals a <strong>Hardware evidence</strong> input. Supply the file that matches the signed hash, then verify again. An arbitrary evidence file cannot establish trust.</p></div>
+      </details>
+      <details class="faq-item">
+        <summary>What is a task specification, and why is it missing from my download?</summary>
+        <div class="faq-answer"><p>The task specification, or <code>JobSpec</code>, describes the job Hive sent to the TEE. It includes a hash of the upstream request body, and its own hash is signed into the receipt. Providing both the original specification and request body lets the verifier check that binding.</p><p>Hive currently archives receipts and task hashes, without the complete task specifications. Call Records therefore provides the receipt only. A specification cannot be reconstructed from its hash or billing metadata. Leave this input empty when checking receipt authenticity.</p></div>
+      </details>
+      <details class="faq-item">
+        <summary>How do execution IDs differ from request IDs, and where can I find them?</summary>
+        <div class="faq-answer"><p>A request ID identifies a buyer call. An execution ID identifies one attempt to serve that call; retries can give one request several execution IDs.</p><p>Find an execution ID under its attempt in Call Records, in the receipt filename, or under <strong>Signed execution details → job id</strong> in the verification report. It is 32 lowercase hexadecimal characters. The TEE signs this execution ID; the request-to-execution mapping is supplied by Hive.</p></div>
+      </details>
+      <details class="faq-item">
+        <summary>How do Receipt file and Request ID modes differ?</summary>
+        <div class="faq-answer"><p><strong>Receipt file</strong> verifies a file you already downloaded. It works on this static website and runs locally in your browser after the engine loads.</p><p><strong>Request ID</strong> downloads your receipts using your buyer API key and then verifies the selected attempt locally. The web lookup currently requires the local bridge started with <code>tokhive-verify serve</code>; it is unavailable on the static website alone. For another Hive environment, configure the bridge with <code>--api-base-url</code>. Use your buyer API key to access your own requests.</p></div>
+      </details>
+      <details class="faq-item">
+        <summary>What do Verified, Incomplete, and Failed mean?</summary>
+        <div class="faq-answer"><ul><li><strong>Verified:</strong> the required trust checks and comparisons for supplied content passed.</li><li><strong>Incomplete:</strong> no check failed, but a required application expectation, hardware evidence file, or task specification is missing.</li><li><strong>Failed:</strong> at least one check failed. Read that check's explanation before trying again.</li></ul><p>Hardware certificates are checked at the current time. Expired historical evidence can fail even when the receipt's signature remains valid.</p></div>
+      </details>
+      <details class="faq-item">
+        <summary>Why can a receipt be verified while its request and response remain unverified?</summary>
+        <div class="faq-answer"><p>Receipt authenticity and content comparison are separate checks. A verified receipt establishes trust in its signed execution fields and hashes. Comparing those hashes requires the corresponding original content files.</p><p>If you provide no request or response, those contents remain unverified. Check the separate Request and Response results before concluding that your content was compared.</p></div>
+      </details>
+      <details class="faq-item">
+        <summary>How do I compare content, and why might a saved body fail to match?</summary>
+        <div class="faq-answer"><p>Expand <strong>Compare request or response content (optional)</strong>. Supply the exact upstream response body to compare output, or the complete canonical-CBOR task specification and exact upstream request body to compare input.</p><p>The bytes must match what the TEE processed. Formatting JSON, copying rendered text, protocol translation, compression or decompression, and request adaptation can change those bytes. A client-visible body may therefore differ from the signed upstream content. Files from another execution can also fail to match.</p></div>
+      </details>
+      <details class="faq-item">
+        <summary>Does verification prove the model, token usage, or bill is correct?</summary>
+        <div class="faq-answer"><p>Matching request and response content can bind model names and token counts declared in that content to the receipt. The verifier does not independently identify the model the upstream actually ran or recount tokens.</p><p>The receipt has no independent model, token usage, or pricing fields. Prices, commissions, and wallet charges belong to Hive's accounting records and are outside this verifier's checks.</p></div>
+      </details>
+      <details class="faq-item">
+        <summary>Why can a failed or truncated execution have an authentic receipt?</summary>
+        <div class="faq-answer"><p>A TEE can sign an accurate record of an unsuccessful execution. Receipt authenticity checks who signed the record and whether its contents are intact.</p><p>Inspect the signed HTTP status and completion state to see whether the execution completed successfully, failed, or was truncated. A verified receipt alone does not establish successful delivery of a complete answer.</p></div>
+      </details>
+      <details class="faq-item">
+        <summary>Are my files or API key uploaded, stored, or included in reports?</summary>
+        <div class="faq-answer"><p>Selected receipt, evidence, task specification, request, and response files stay in your browser. Verification runs in a local Web Worker using WebAssembly, and these files are not uploaded to the verifier server.</p><p>In Request ID mode, your buyer API key is sent to the local bridge and then to the configured Hive API to retrieve your receipts. The verifier does not persist it, put it in URLs, or include it in reports, and clears the key input after a successful download.</p><p>Exported reports include verification results and signed execution metadata. They do not include your API key or copies of your local request and response files.</p></div>
+      </details>
     </section>
   </main>
   <footer><span>TokHive / Independent verification</span><span>No analytics. No third-party assets. No file uploads.</span></footer>
