@@ -4,7 +4,7 @@ go 1.27.3
 
 require (
 	github.com/fxamacker/cbor/v2 v2.9.3
-	github.com/tokhive/tee v0.0.0
+	github.com/tokhive/tee v0.0.0-20261103085951-7dc098f9edee
 )
 
 require (
@@ -76,8 +76,6 @@ require (
 	google.golang.org/grpc v1.83.1 // indirect
 	google.golang.org/protobuf v1.36.12 // indirect
 )
-
-replace github.com/tokhive/tee => ../tee
 
 replace github.com/consensys/gnark v0.16.0 => github.com/consensys/gnark v0.14.0
 

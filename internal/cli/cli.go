@@ -18,6 +18,10 @@ import (
 	"github.com/tokhive/verifier/web"
 )
 
+// Version and Commit are set by the release build.
+var Version = "dev"
+var Commit = "unknown"
+
 const usage = `TokHive Verifier
 
   tokhive-verify verify [options] receipt.cbor
@@ -42,7 +46,7 @@ func Run(args []string, out, errOut io.Writer) int {
 	case "serve":
 		return runServe(args[1:], out, errOut)
 	case "version", "--version":
-		fmt.Fprintln(out, "tokhive-verify 0.1.0")
+		fmt.Fprintf(out, "tokhive-verify %s (%s)\n", Version, Commit)
 		return 0
 	default:
 		fmt.Fprintln(errOut, "Unknown command:", args[0])
@@ -68,7 +72,7 @@ func runVerify(args []string, out, errOut io.Writer) int {
 	requestID := f.String("request-id", "", "fetch evidence for your request using a buyer API key")
 	attemptID := f.String("attempt-id", "", "select an execution attempt when a request has several receipts")
 	apiBase := f.String("api-base-url", "https://api.tokhive.ai", "buyer verification API origin")
-	keyEnv := f.String("api-key-env", "TOKHIVE_API_KEY", "environment variable containing your buyer API key")
+	keyEnv := f.String("api-key-env", "HIVE_API_KEY", "environment variable containing your buyer API key")
 	if err := f.Parse(args); err != nil {
 		if err == flag.ErrHelp {
 			return 0
