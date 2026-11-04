@@ -39,6 +39,7 @@ def main():
         parser.error("version must be a release tag such as v0.1.0")
     if run("git", "status", "--porcelain", "--untracked-files=normal"):
         parser.error("release builds require a clean committed checkout")
+    os.environ["GOWORK"] = "off"
     commit = run("git", "rev-parse", "HEAD")
     module = json.loads(run("go", "list", "-m", "-json", "github.com/tokhive/tee"))
     if module.get("Replace") or not module.get("Version"):
@@ -58,7 +59,7 @@ def main():
         for system, arch in TARGETS:
             env = {**os.environ, "CGO_ENABLED": "0", "GOOS": system, "GOARCH": arch}
             flags = f"-s -w -X github.com/tokhive/verifier/internal/cli.Version={args.version} -X github.com/tokhive/verifier/internal/cli.Commit={commit}"
-            subprocess.run(["go", "build", "-trimpath", "-buildvcs=true", "-ldflags", flags,
+            subprocess.run(["go", "build", "-mod=readonly", "-trimpath", "-buildvcs=true", "-ldflags", flags,
                             "-o", str(binary), "./cmd/tokhive-verify"], cwd=ROOT, env=env, check=True)
             archive(output / f"tokhive-verify-{args.version}-{system}-{arch}.tar.gz",
                     common + [("tokhive-verify", binary.read_bytes(), 0o755)])
@@ -66,6 +67,8 @@ def main():
     archive(output / f"tokhive-verify-{args.version}-web.tar.gz", common + [
         ("web/" + p.relative_to(assets).as_posix(), p.read_bytes(), 0o644)
         for p in assets.rglob("*") if p.is_file()])
+    if run("git", "rev-parse", "HEAD") != commit or run("git", "status", "--porcelain", "--untracked-files=normal"):
+        raise RuntimeError("source changed during release build; discard the incomplete output")
     (output / "manifest.json").write_bytes(manifest)
     checksums = "".join(hashlib.sha256(p.read_bytes()).hexdigest() + "  " + p.name + "\n"
                         for p in sorted(output.iterdir()) if p.is_file())
