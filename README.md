@@ -15,13 +15,7 @@ A standalone execution receipt verifier with CLI and web interfaces. Both use th
 
 ## Build
 
-Requires Go 1.27.3+ and Make. Node.js is needed only for the optional WASM runtime check. Development currently uses the sibling `../tee` checkout:
-
-```text
-tokhive/
-├── tee/
-└── verifier/
-```
+Requires the Go version pinned in `go.mod` and Make. Node.js is needed only for the optional WASM runtime check. The TEE library is pinned to an immutable Go module version; no sibling checkout is required.
 
 From the `verifier` directory:
 
@@ -48,7 +42,7 @@ To compare the input as well:
 
 ```bash
 ./bin/tokhive-verify verify \
-  --expected-app "$TOKHIVE_EXPECTED_APP" \
+  --expected-app "$HIVE_EXPECTED_APP" \
   --job-spec job-spec.cbor \
   --request request.raw \
   --response response.raw \
@@ -63,10 +57,10 @@ For a hash-only receipt, add `--evidence evidence.bin`. See `verify --help` for 
 Set your buyer API key in the environment so it does not appear in command-line arguments or process listings:
 
 ```bash
-# Set TOKHIVE_API_KEY to your own buyer API key before running this command.
+# Set HIVE_API_KEY to your own buyer API key before running this command.
 ./bin/tokhive-verify verify \
-  --request-id "$TOKHIVE_REQUEST_ID" \
-  --expected-app "$TOKHIVE_EXPECTED_APP" \
+  --request-id "$HIVE_REQUEST_ID" \
+  --expected-app "$HIVE_EXPECTED_APP" \
   --json
 ```
 
@@ -144,3 +138,33 @@ internal/cli/            CLI commands, local web server, and restricted lookup b
 web/static/              Web interface, Web Worker, and generated WASM assets
 scripts/                 Engine consistency checks and rejection-demo generator
 ```
+
+## Versioned release artifacts
+
+From a clean committed checkout, run:
+
+```bash
+python3 scripts/build-release.py --version v0.1.0 --output artifacts/v0.1.0
+```
+
+The script builds Linux and macOS CLI archives for amd64 and arm64, a browser
+archive, `manifest.json`, and `SHA256SUMS`. The manifest records the verifier
+commit, pinned TEE module, Go version and targets; the CLI `version` command
+reports its release version and commit. Cross-compilation does not prove runtime
+acceptance on every target. No artifact is automatically trusted or signed.
+
+A `v*` tag (or a manual run naming an existing tag) runs tests and builds a draft
+GitHub Release. Review its source, checksums and test results before publishing.
+Keep historical assets immutable. A compromised verifier version requires a
+release advisory and replacement downloads; a withdrawn TEE application is a
+separate release-catalog revocation.
+
+Download from the official repository's Releases page, check the selected
+version and source commit, and run `sha256sum -c SHA256SUMS` (on macOS,
+`shasum -a 256 -c SHA256SUMS`). Checksums detect corruption; their trust still
+comes from the authenticated release channel. For signed TEE catalogs and the
+independent signing-key bootstrap, see the TEE repository's
+[public verification guide](https://github.com/tokhive/tee/blob/main/docs/public-verification.md).
+
+The default buyer key variable is `HIVE_API_KEY`. Use `--api-key-env` when an
+existing client configuration uses a different variable name.

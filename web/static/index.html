@@ -20,6 +20,7 @@
       <h1>Inspect the receipt.<br><span>Verify the evidence.</span></h1>
       <p class="lede">Download a receipt from Call Records and check the hardware, application and signature behind that execution. Start with your receipt and a trusted application identity.</p>
     </div>
+    <p class="lede"><a href="https://github.com/tokhive/tee/blob/main/docs/public-verification.md">Release trust and verification guide</a> · <a href="https://github.com/tokhive/tee/blob/main/releases/catalog.json">Release history</a> · <a href="https://github.com/tokhive/verifier/releases">CLI downloads</a></p>
     <div class="workspace">
       <section class="panel input-panel" aria-labelledby="input-title">
         <div class="panel-heading"><h2 id="input-title">Your evidence</h2><span class="mono">01 — INPUT</span></div>
@@ -129,7 +130,7 @@
       </details>
       <details class="faq-item">
         <summary>What is the trusted application identity, and where do I get it?</summary>
-        <div class="faq-answer"><p>It is the full <code>snp-app:</code> identity followed by the 64-character lowercase hexadecimal hash of the TEE application you expect to have run. Obtain it from a TEE release source you independently trust.</p><p>The verifier does not currently publish a trusted release manifest or automatically trust the identity declared inside a receipt. Without an independently trusted identity, application trust cannot be verified.</p></div>
+        <div class="faq-answer"><p>It is the full <code>snp-app:</code> identity followed by the 64-character lowercase hexadecimal hash of the TEE application you expect to have run. Obtain it from a TEE release source you independently trust.</p><p>Use the linked release guide to check the published catalog and signing key through an independently trusted channel. This page does not automatically verify catalog signatures or trust the identity declared inside a receipt. Without an independently trusted identity, application trust cannot be verified.</p></div>
       </details>
       <details class="faq-item">
         <summary>What is hardware evidence, and when do I need to provide it?</summary>

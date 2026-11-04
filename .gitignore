@@ -4,3 +4,5 @@
 /web/static/wasm_exec.LICENSE
 *.test
 .DS_Store
+
+/artifacts/
