@@ -3,8 +3,8 @@
   "releases": [
     {
       "application_id": "snp-app:43c434cbc1b6a4d11b057d54ff50e3144e9371bb4ab3fb8a785f68c07c65dcf4",
-      "secure_boot_release_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMIIBojANBgkqhkiG9w0BAQEFAAOCAY8AMIIBigKCAYEAl41FnlHnCCvLoG0dIz2z\nYdjrKRJerEZKR+pVkhXPV+ZD08PqYz6QLaxk0ahb6sqH0iOt04t3nAvGKjvZ+MaR\nhAIT9KDZBKMzMyacD7IoNVIvTEezoOol1pma3wXh88lPE3LP5vz7DCjfgOLeET/3\n23ovxKR8NHMR7t4Gp57UeapO1cs8/1HLn0P0lBCYlWzI48+Ms6EMSNYl0TDpcZUJ\no6rrLIjTGQqNuprbUPWLX8wvSaf9vshVgzs84QYyY673OVAoF8VXs6rkVqJjqIFD\nF29MxJqe5kKY1rw0KgESIrjCXdYDyUtsH6XdBdsfJWorKBun7DZTbDGwjMZO3VZm\nzkwh3JF0sV0XuQHxZonzHtEe+v4sL+MSKImnOWJ9KxXflaTIfj3N1AFlYbrIyuyQ\n7baLgFkglkPKQ3dJwPI1kA1c0y6Ge7LqUHXPLge617NTKQ6NGiOEIgeE+gOqyB9Y\nSKvV81Fy+7Qw7z6SgcSJATQcvB7mMQ6dsCOpfyMijWzhAgMBAAE=\n-----END PUBLIC KEY-----\n",
-      "secure_boot_release_public_key_sha256": "6226f459066e2c292ed2570557fc11da6bc09f17515b449cdbf6fe1e849f7eab"
+      "secure_boot_release_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMIIBojANBgkqhkiG9w0BAQEFAAOCAY8AMIIBigKCAYEAzkDRRuR489F3/4zb69Iw\n7Gk2adQGQR7bfgyvAMRuQC56iO97WnrK7Xlw7IYFi7K5bFLbjuByuZXSL+j9JI9E\nMa0EMboyLEDwTqesDoApG9imjm+ezBI9eRBcZTjq69V9joermE13zqWQEGza/WiU\n4tixretY3bAzj1VXNCtG8lXkBeBBrA75tRor5nUb/Xs6YVVrjDb/aNqDZYZMKl3U\nUONC2kMh93GO8w8qOG5kQKd49rvy8BPprqwEqLPWT47AW21fAsWUaOf1VhZQ4t4h\nCwjFTOoyoprFLkY05xKBQTEFEDXzAfmrwL1QYZjMrVQUVXNeWNAo1m1CSz3E6IBb\no27dsaCg0q4ks1Ij8ffSaNpHONLazGD93Ep83F7VwyR1jgofntnNR2mq/t4I3Tyl\n5QHazhTLXN4ymjnKMAUF2apIJdds3FHlclMrx5OzLGOenxsNiier6xhBxMbALfFv\nGCRbb//jc0A8fXhkqBRboDnTatCxN7hpL8LbOtLy7rnDAgMBAAE=\n-----END PUBLIC KEY-----\n",
+      "secure_boot_release_public_key_sha256": "1af0aa2c8d13c1c0546d878e49710c9f247d2c1d846c6d8a2445c1ea0daffcd9"
     }
   ]
 }
