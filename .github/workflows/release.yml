@@ -1,0 +1,71 @@
+name: Build verifier release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Existing release tag (for example v0.1.0)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.version || github.ref }}
+          fetch-depth: 0
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Check tag and run tests
+        env:
+          RELEASE_TAG: ${{ inputs.version || github.ref_name }}
+        run: |
+          test "$(git rev-parse HEAD)" = "$(git rev-parse "refs/tags/$RELEASE_TAG^{commit}")"
+          make test
+      - name: Build fixed-version artifacts
+        env:
+          RELEASE_TAG: ${{ inputs.version || github.ref_name }}
+        run: python3 scripts/build-release.py --version "$RELEASE_TAG" --output artifacts/release
+      - name: Verify native and browser engines agree
+        run: |
+          make build
+          go run scripts/make-demo.go /tmp/verifier-demo
+          node scripts/check-wasm.cjs /tmp/verifier-demo
+          cd artifacts/release
+          sha256sum -c SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: verifier-release
+          path: artifacts/release/
+          if-no-files-found: error
+
+  draft:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: verifier-release
+          path: release
+      - name: Create draft release for review
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ inputs.version || github.ref_name }}
+        run: gh release create "$RELEASE_TAG" release/* --verify-tag --draft --title "TokHive Verifier $RELEASE_TAG" --notes "Fixed-version CLI and browser artifacts. Check SHA256SUMS and manifest.json before use. This release does not supply a trusted TEE application identity."

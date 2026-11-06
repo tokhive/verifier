@@ -109,9 +109,9 @@ func buyerEvidenceServer(t *testing.T, multiple bool) (*httptest.Server, string)
 
 func TestCLIRequestIDFetchesAndRunsRealVerification(t *testing.T) {
 	s, app := buyerEvidenceServer(t, false)
-	t.Setenv("TOKHIVE_TEST_KEY", "buyer-test-key")
+	t.Setenv("HIVE_API_KEY", "buyer-test-key")
 	var out, errOut bytes.Buffer
-	code := Run([]string{"verify", "--request-id", "req_fixture", "--api-base-url", s.URL, "--api-key-env", "TOKHIVE_TEST_KEY", "--expected-app", app, "--json"}, &out, &errOut)
+	code := Run([]string{"verify", "--request-id", "req_fixture", "--api-base-url", s.URL, "--expected-app", app, "--json"}, &out, &errOut)
 	var report verifier.Report
 	if code != 1 || json.Unmarshal(out.Bytes(), &report) != nil || report.Verified {
 		t.Fatalf("lookup: exit=%d stdout=%s stderr=%s", code, &out, &errOut)
@@ -123,9 +123,9 @@ func TestCLIRequestIDFetchesAndRunsRealVerification(t *testing.T) {
 
 func TestCLIRequestIDDoesNotSilentlyChooseAnAttempt(t *testing.T) {
 	s, app := buyerEvidenceServer(t, true)
-	t.Setenv("TOKHIVE_TEST_KEY", "buyer-test-key")
+	t.Setenv("HIVE_TEST_KEY", "buyer-test-key")
 	var out, errOut bytes.Buffer
-	code := Run([]string{"verify", "--request-id", "req_fixture", "--api-base-url", s.URL, "--api-key-env", "TOKHIVE_TEST_KEY", "--expected-app", app}, &out, &errOut)
+	code := Run([]string{"verify", "--request-id", "req_fixture", "--api-base-url", s.URL, "--api-key-env", "HIVE_TEST_KEY", "--expected-app", app}, &out, &errOut)
 	if code != 2 || !strings.Contains(errOut.String(), "--attempt-id") {
 		t.Fatalf("ambiguous attempts: %d %s", code, &errOut)
 	}
