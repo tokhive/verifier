@@ -18,8 +18,8 @@ func main() {
 				result = string(b)
 			}
 		}()
-		if len(args) != 6 {
-			return `{"engine_error":"Expected options, receipt, evidence, response, specification and request"}`
+		if len(args) != 7 {
+			return `{"engine_error":"Expected options, receipt, evidence, response, specification, request and release key"}`
 		}
 		var opts verifier.Options
 		if err := json.Unmarshal([]byte(args[0].String()), &opts); err != nil {
@@ -40,6 +40,7 @@ func main() {
 		}
 		in.Receipt = copyBytes(args[1], verifier.MaxReceiptBytes)
 		in.Evidence = copyBytes(args[2], verifier.MaxEvidenceBytes)
+		in.ReleasePublicKey = copyBytes(args[6], 16<<10)
 		in.ResponseProvided = !args[3].IsNull() && !args[3].IsUndefined()
 		in.Response = copyBytes(args[3], verifier.MaxResponseBytes)
 		in.JobSpec = copyBytes(args[4], verifier.MaxJobSpecBytes)

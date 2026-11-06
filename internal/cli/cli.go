@@ -60,6 +60,7 @@ func runVerify(args []string, out, errOut io.Writer) int {
 	f.StringVar(&o.ExpectedHost, "expected-host", "", "expected upstream hostname")
 	f.StringVar(&o.ExpectedJobID, "expected-job-id", "", "expected receipt execution ID (32 lowercase hex)")
 	f.Int64Var(&o.MaxAgeSeconds, "max-age", 0, "maximum receipt age in seconds; 0 disables age limit")
+	releaseCatalog := f.String("release-catalog", os.Getenv("TOKHIVE_RELEASE_CATALOG"), "trusted release catalog JSON used to resolve Secure Boot keys")
 	evidence := f.String("evidence", "", "matching evidence file for a hash-only receipt")
 	response := f.String("response", "", "exact raw upstream response body to compare")
 	spec := f.String("job-spec", "", "canonical-CBOR task specification bound by the receipt")
@@ -140,6 +141,21 @@ func runVerify(args []string, out, errOut io.Writer) int {
 		if in, err = selected.Apply(in); err != nil {
 			fmt.Fprintln(errOut, err)
 			return 2
+		}
+	}
+	if *releaseCatalog != "" && o.ExpectedApp != "" && len(in.Receipt) > 0 {
+		secureBoot, receiptErr := verifier.ReceiptUsesSecureBoot(in.Receipt)
+		if receiptErr == nil && secureBoot {
+			catalog, catalogErr := verifier.LoadReleaseCatalogFile(*releaseCatalog)
+			if catalogErr != nil {
+				fmt.Fprintln(errOut, "load release catalog:", catalogErr)
+				return 2
+			}
+			in.ReleasePublicKey, catalogErr = catalog.ReleasePublicKeyFor(o.ExpectedApp)
+			if catalogErr != nil {
+				fmt.Fprintln(errOut, "resolve Secure Boot release key:", catalogErr)
+				return 2
+			}
 		}
 	}
 	r := verifier.Verify(in)

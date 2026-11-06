@@ -11,6 +11,8 @@ let timeout;
 let bundle;
 let apiOrigin;
 let lookupContext;
+let releaseCatalog;
+let releaseCatalogReady = Promise.resolve();
 
 const mode = () => form.elements.mode.value;
 function resetHardwareEvidence() {
@@ -166,6 +168,7 @@ form.addEventListener("submit", async event => {
     }
     if (mode() === "file" && !files.receipt) throw new Error("Choose a receipt file first.");
     setBusy(true);
+    await releaseCatalogReady;
     const attempt = mode() === "lookup" ? await lookupAttempt() : null;
     const read = async file => file ? file.arrayBuffer() : null;
     let [receipt, evidence, response, jobSpec, request] = await Promise.all([read(mode() === "file" ? files.receipt : null), read(files.evidence), read(files.response), read(files["job-spec"]), read(files.request)]);
@@ -181,7 +184,15 @@ form.addEventListener("submit", async event => {
       expected_job_id: $("expected-job-id").value.trim() || (attempt ? attempt.id : ""),
       max_age_seconds: maxAge,
     };
-    worker.postMessage({ options, receipt, evidence, response, jobSpec, request }, [receipt, evidence, response, jobSpec, request].filter(Boolean));
+    let releaseKey = null;
+    if (options.expected_app && releaseCatalog) {
+      const release = releaseCatalog.releases.find(item => item.application_id === options.expected_app);
+      if (release?.secure_boot_release_public_key_pem) {
+        releaseKey = new TextEncoder().encode(release.secure_boot_release_public_key_pem).buffer;
+      }
+    }
+    const transfer = [receipt, evidence, response, jobSpec, request, releaseKey].filter(Boolean);
+    worker.postMessage({ options, receipt, evidence, response, jobSpec, request, releaseKey }, transfer);
     timeout = setTimeout(() => {
       worker.terminate(); engineReady = false;
       fail("Verification timed out. The engine was stopped; reload the page to try again.");
@@ -240,4 +251,7 @@ function render(report) {
 boot();
 fetch("/api/config").then(response => response.ok ? response.json() : null).then(config => {
   if (config?.api_base_url) { apiOrigin = config.api_base_url; $("api-origin").textContent = apiOrigin; }
+}).catch(() => {});
+releaseCatalogReady = fetch("release-catalog.json", { cache: "no-store" }).then(response => response.ok ? response.json() : null).then(catalog => {
+  if (catalog?.version === 1 && Array.isArray(catalog.releases)) releaseCatalog = catalog;
 }).catch(() => {});
