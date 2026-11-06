@@ -7,6 +7,7 @@ A standalone execution receipt verifier with CLI and web interfaces. Both use th
 - Verify canonical CBOR encoding, TEE receipt signatures, and signing-key bindings.
 - Reuse the `tokhive/tee` verification library to check AWS SEV-SNP / NitroTPM evidence chains, hardware policy, and the expected application identity. Simulated platforms are rejected.
 - Check a user-supplied application hash and optional expectations for the policy hash, upstream host, execution ID, and maximum receipt age.
+- Resolve the Secure Boot release public key at runtime from `web/static/release-catalog.json` by the expected application identity; users do not need to upload a key file. Deploy this file only after verifying it against the signed TEE release catalog.
 - Support both inline hardware evidence and separate evidence files for hash-only receipts.
 - Optionally compare the raw response's execution-bound hash and byte count. Extract model and usage declarations from supported JSON and SSE responses.
 - Optionally verify the chain from task specification to request-body hash to raw request, establishing the receipt's indirect binding to the requested model and other input content.
@@ -83,6 +84,8 @@ Hive implements buyer authentication and request ownership checks for the public
 Open the printed URL, `http://127.0.0.1:8787`. Choose **Receipt file** or **Request ID**, enter a trusted application identity, and start verification.
 
 The default form focuses on the receipt and trusted application identity. Production receipts already embed hardware evidence. If verification finds a hash-only receipt, the form reveals a **Hardware evidence** input so you can supply the matching file and verify again. Changing the receipt, evidence source, or execution selection clears that supplemental file.
+
+For Secure Boot evidence, the page loads the release catalog as a separate runtime asset and selects the public R key by the trusted `snp-app` identity. A missing catalog entry leaves the hardware check incomplete or failed; the verifier never trusts the receipt's self-declared identity as a key source.
 
 Expand **Compare request or response content (optional)** for raw body comparisons. Comparing a request requires both the original canonical-CBOR task specification and the exact upstream request bytes. Hive's Call Records downloads currently supply the receipt only; obtain these extra files separately from the execution source. Expected host, policy hash, execution ID, and receipt age are under **Additional expectations (optional)**.
 

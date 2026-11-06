@@ -4,7 +4,7 @@ go 1.27.3
 
 require (
 	github.com/fxamacker/cbor/v2 v2.9.3
-	github.com/tokhive/tee v0.0.0-20261103085951-7dc098f9edee
+	github.com/tokhive/tee v0.0.0-20261106033730-dba36be96165
 )
 
 require (

@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "releases": [
+    {
+      "application_id": "snp-app:43c434cbc1b6a4d11b057d54ff50e3144e9371bb4ab3fb8a785f68c07c65dcf4",
+      "secure_boot_release_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMIIBojANBgkqhkiG9w0BAQEFAAOCAY8AMIIBigKCAYEAl41FnlHnCCvLoG0dIz2z\nYdjrKRJerEZKR+pVkhXPV+ZD08PqYz6QLaxk0ahb6sqH0iOt04t3nAvGKjvZ+MaR\nhAIT9KDZBKMzMyacD7IoNVIvTEezoOol1pma3wXh88lPE3LP5vz7DCjfgOLeET/3\n23ovxKR8NHMR7t4Gp57UeapO1cs8/1HLn0P0lBCYlWzI48+Ms6EMSNYl0TDpcZUJ\no6rrLIjTGQqNuprbUPWLX8wvSaf9vshVgzs84QYyY673OVAoF8VXs6rkVqJjqIFD\nF29MxJqe5kKY1rw0KgESIrjCXdYDyUtsH6XdBdsfJWorKBun7DZTbDGwjMZO3VZm\nzkwh3JF0sV0XuQHxZonzHtEe+v4sL+MSKImnOWJ9KxXflaTIfj3N1AFlYbrIyuyQ\n7baLgFkglkPKQ3dJwPI1kA1c0y6Ge7LqUHXPLge617NTKQ6NGiOEIgeE+gOqyB9Y\nSKvV81Fy+7Qw7z6SgcSJATQcvB7mMQ6dsCOpfyMijWzhAgMBAAE=\n-----END PUBLIC KEY-----\n",
+      "secure_boot_release_public_key_sha256": "6226f459066e2c292ed2570557fc11da6bc09f17515b449cdbf6fe1e849f7eab"
+    }
+  ]
+}

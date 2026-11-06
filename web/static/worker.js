@@ -18,7 +18,7 @@ onmessage = async ({ data }) => {
   try {
     await ready;
     const asBytes = buffer => buffer === null ? null : new Uint8Array(buffer);
-    const report = JSON.parse(tokhiveVerify(JSON.stringify(data.options), asBytes(data.receipt), asBytes(data.evidence), asBytes(data.response), asBytes(data.jobSpec), asBytes(data.request)));
+    const report = JSON.parse(tokhiveVerify(JSON.stringify(data.options), asBytes(data.receipt), asBytes(data.evidence), asBytes(data.response), asBytes(data.jobSpec), asBytes(data.request), asBytes(data.releaseKey)));
     if (report.engine_error) throw new Error(report.engine_error);
     postMessage({ type: "report", report });
   } catch (error) {

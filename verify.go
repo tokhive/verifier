@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -13,6 +14,7 @@ import (
 	"github.com/tokhive/tee/platform"
 	"github.com/tokhive/tee/platform/sevsnp"
 	"github.com/tokhive/tee/proof"
+	"github.com/tokhive/tee/shared"
 )
 
 const (
@@ -26,14 +28,28 @@ const (
 // Input contains original canonical-CBOR receipt bytes and optional evidence and
 // raw response bytes. ResponseProvided distinguishes an empty file from no file.
 type Input struct {
-	Receipt          []byte
-	Evidence         []byte
+	Receipt  []byte
+	Evidence []byte
+	// ReleasePublicKey is the trusted Secure Boot R public key resolved from
+	// the signed release catalog. It is deliberately supplied at runtime.
+	ReleasePublicKey []byte
 	Response         []byte
 	ResponseProvided bool
 	JobSpec          []byte
 	Request          []byte
 	RequestProvided  bool
 	Options          Options
+}
+
+// ReceiptUsesSecureBoot reports whether a valid receipt carries the Secure
+// Boot evidence mode. Callers use it to decide whether a release catalog key
+// is needed; an invalid receipt remains the responsibility of Verify.
+func ReceiptUsesSecureBoot(raw []byte) (bool, error) {
+	signed, err := proof.DecodeAndVerify(raw, proof.VerifyOptions{})
+	if err != nil {
+		return false, err
+	}
+	return shared.IsSecureBootAttestation(signed.Receipt.Attestation.Evidence), nil
 }
 
 // Options are the user's expectations, never values automatically trusted from
@@ -134,6 +150,14 @@ func (r *Report) finish() Report {
 // refused. This API does not provide a user-controlled verification clock.
 func Verify(in Input) Report {
 	return verify(in, time.Now(), func(id platform.Identity, app string) error {
+		if shared.IsSecureBootAttestation(id.Evidence) {
+			if len(in.ReleasePublicKey) == 0 {
+				return errors.New("Secure Boot evidence requires a trusted release public key from the release catalog")
+			}
+			if err := shared.SetReleasePublicKeyPEM(in.ReleasePublicKey); err != nil {
+				return fmt.Errorf("load trusted Secure Boot release public key: %w", err)
+			}
+		}
 		return (sevsnp.Verifier{ExpectedApp: app}).CheckEvidence(id)
 	})
 }
