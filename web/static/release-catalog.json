@@ -5,6 +5,11 @@
       "application_id": "snp-app:43c434cbc1b6a4d11b057d54ff50e3144e9371bb4ab3fb8a785f68c07c65dcf4",
       "secure_boot_release_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMIIBojANBgkqhkiG9w0BAQEFAAOCAY8AMIIBigKCAYEAzkDRRuR489F3/4zb69Iw\n7Gk2adQGQR7bfgyvAMRuQC56iO97WnrK7Xlw7IYFi7K5bFLbjuByuZXSL+j9JI9E\nMa0EMboyLEDwTqesDoApG9imjm+ezBI9eRBcZTjq69V9joermE13zqWQEGza/WiU\n4tixretY3bAzj1VXNCtG8lXkBeBBrA75tRor5nUb/Xs6YVVrjDb/aNqDZYZMKl3U\nUONC2kMh93GO8w8qOG5kQKd49rvy8BPprqwEqLPWT47AW21fAsWUaOf1VhZQ4t4h\nCwjFTOoyoprFLkY05xKBQTEFEDXzAfmrwL1QYZjMrVQUVXNeWNAo1m1CSz3E6IBb\no27dsaCg0q4ks1Ij8ffSaNpHONLazGD93Ep83F7VwyR1jgofntnNR2mq/t4I3Tyl\n5QHazhTLXN4ymjnKMAUF2apIJdds3FHlclMrx5OzLGOenxsNiier6xhBxMbALfFv\nGCRbb//jc0A8fXhkqBRboDnTatCxN7hpL8LbOtLy7rnDAgMBAAE=\n-----END PUBLIC KEY-----\n",
       "secure_boot_release_public_key_sha256": "1af0aa2c8d13c1c0546d878e49710c9f247d2c1d846c6d8a2445c1ea0daffcd9"
+    },
+    {
+      "application_id": "snp-app:83f877b9b046972daa9b0310b40ca8d642647d3a33e7ccf2031d0f90e7ab73c7",
+      "secure_boot_release_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMIIBojANBgkqhkiG9w0BAQEFAAOCAY8AMIIBigKCAYEAzkDRRuR489F3/4zb69Iw\n7Gk2adQGQR7bfgyvAMRuQC56iO97WnrK7Xlw7IYFi7K5bFLbjuByuZXSL+j9JI9E\nMa0EMboyLEDwTqesDoApG9imjm+ezBI9eRBcZTjq69V9joermE13zqWQEGza/WiU\n4tixretY3bAzj1VXNCtG8lXkBeBBrA75tRor5nUb/Xs6YVVrjDb/aNqDZYZMKl3U\nUONC2kMh93GO8w8qOG5kQKd49rvy8BPprqwEqLPWT47AW21fAsWUaOf1VhZQ4t4h\nCwjFTOoyoprFLkY05xKBQTEFEDXzAfmrwL1QYZjMrVQUVXNeWNAo1m1CSz3E6IBb\no27dsaCg0q4ks1Ij8ffSaNpHONLazGD93Ep83F7VwyR1jgofntnNR2mq/t4I3Tyl\n5QHazhTLXN4ymjnKMAUF2apIJdds3FHlclMrx5OzLGOenxsNiier6xhBxMbALfFv\nGCRbb//jc0A8fXhkqBRboDnTatCxN7hpL8LbOtLy7rnDAgMBAAE=\n-----END PUBLIC KEY-----\n",
+      "secure_boot_release_public_key_sha256": "1af0aa2c8d13c1c0546d878e49710c9f247d2c1d846c6d8a2445c1ea0daffcd9"
     }
   ]
 }
