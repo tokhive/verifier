@@ -34,3 +34,28 @@ func TestReleaseCatalogRejectsFingerprintMismatch(t *testing.T) {
 		t.Fatal("accepted a mismatched public key fingerprint")
 	}
 }
+
+// The bundled catalog is edited by hand for each TEE release, so this checks
+// the file that ships instead of an inline fixture.
+func TestBundledReleaseCatalogEntriesResolve(t *testing.T) {
+	catalog, err := LoadReleaseCatalogFile("web/static/release-catalog.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(catalog.Releases) == 0 {
+		t.Fatal("bundled catalog lists no releases")
+	}
+	seen := map[string]bool{}
+	for _, release := range catalog.Releases {
+		if seen[release.ApplicationID] {
+			t.Errorf("%s is listed twice", release.ApplicationID)
+		}
+		seen[release.ApplicationID] = true
+		if release.SecureBootReleasePublicKeySHA256 == "" {
+			t.Errorf("%s has no Secure Boot public key fingerprint", release.ApplicationID)
+		}
+		if _, err := catalog.ReleasePublicKeyFor(release.ApplicationID); err != nil {
+			t.Error(err)
+		}
+	}
+}
